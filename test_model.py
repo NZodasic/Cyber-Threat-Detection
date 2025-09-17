@@ -1,34 +1,48 @@
+# test_model.py
 import joblib
 import numpy as np
+import os
+import argparse
 
-def extract_byte_features(filepath, max_len=2000):
-    """
-    Đọc file .exe và convert thành feature vector từ byte value.
-    Pad hoặc truncate để fixed length.
-    """
+MAX_BYTES = 2000  # phải giống với khi bạn build dataset / train
+
+def extract_byte_features(filepath, max_len=MAX_BYTES):
+    """Đọc file .exe và trả về vector (1, max_len) padded/truncated"""
     with open(filepath, "rb") as f:
-        bytez = f.read()
-    byte_vals = [b for b in bytez]
+        data = f.read(max_len)
+    arr = list(data)
+    if len(arr) < max_len:
+        arr += [0] * (max_len - len(arr))
+    return np.array(arr, dtype=np.int32).reshape(1, -1)
 
-    # Truncate or pad
-    if len(byte_vals) > max_len:
-        byte_vals = byte_vals[:max_len]
-    else:
-        byte_vals += [0] * (max_len - len(byte_vals))
+def load_model(model_path="malware_detector.pkl"):
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+    model = joblib.load(model_path)
+    return model
 
-    return np.array(byte_vals).reshape(1, -1)
-
-# Load model
-model = joblib.load("malware_model.pkl")
-
-def predict_exe(filepath):
-    features = extract_byte_features(filepath)
-    pred = model.predict(features)[0]
-    prob = model.predict_proba(features)[0]
+def predict_file(model, filepath):
+    X = extract_byte_features(filepath)
+    pred = model.predict(X)[0]
+    prob = None
+    if hasattr(model, "predict_proba"):
+        prob = model.predict_proba(X)[0]
     return pred, prob
 
-# Example usage
 if __name__ == "__main__":
-    file_path = "test.exe"   # file exe bất kỳ
-    label, prob = predict_exe(file_path)
-    print(f"Prediction: {label}, Probability: {prob}")
+    parser = argparse.ArgumentParser(description="Test malware model on one .exe file")
+    parser.add_argument("exe_path", help="Path to the .exe file to test")
+    parser.add_argument("--model", default="malware_detector.pkl", help="Path to saved .pkl model")
+    args = parser.parse_args()
+
+    model = load_model(args.model)
+    if not os.path.exists(args.exe_path):
+        raise FileNotFoundError(f"Exe file not found: {args.exe_path}")
+
+    label, prob = predict_file(model, args.exe_path)
+    print("Prediction:", label)
+    if prob is not None:
+        # If binary, prob may be [p_benign, p_virus] or vice versa depending on training labels
+        print("Probabilities:", prob)
+    else:
+        print("Model does not provide predict_proba output.")
