@@ -1,0 +1,11 @@
+# create_dummy_pe.py
+def create_dummy_pe(path="dummy_benign.exe", size=3000):
+    # Tạo file nhị phân bắt đầu bằng "MZ" (0x4D 0x5A) + padding
+    header = bytes([0x4D, 0x5A])  # 'MZ' signature
+    body = bytes([0x90]) * (size - len(header))  # NOP-like bytes
+    with open(path, "wb") as f:
+        f.write(header + body)
+    print(f"Dummy file written: {path} (size={size})")
+
+if __name__ == "__main__":
+    create_dummy_pe("dummy_benign.exe", size=5000)
