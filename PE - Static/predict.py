@@ -1,12 +1,13 @@
+#!/usr/bin/env python3
 """
-Tự động extract features + dự đoán malware/benign cho PE file
+Extract features + dự đoán malware/benign cho PE file (độc lập)
 
 Usage:
-  python predict_pe.py --file sample.exe
-  python predict_pe.py --file sample.exe --mlp
-  python predict_pe.py --file sample.exe --rf
-  
-Requirements:
+  python predict.py --file sample.exe
+  python predict.py --file sample.exe --mlp
+  python predict.py --file sample.exe --rf
+
+Yêu cầu:
   pip install pefile pandas numpy scikit-learn joblib torch
 """
 
@@ -17,13 +18,15 @@ import joblib
 import numpy as np
 import pandas as pd
 
+# ===============================
+# 1. Hàm extract_features (copy từ pe_feature_extractor.py)
+# ===============================
 import pefile
 import hashlib
 
 def extract_features(path, label=""):
     """
     Extract features từ 1 file PE.
-    (Hàm này copy từ pe_feature_extractor.py để file predict chạy độc lập)
     """
     try:
         pe = pefile.PE(path)
@@ -56,7 +59,9 @@ def extract_features(path, label=""):
     features['label'] = label
     return features
 
+# ===============================
 # 2. Model + Preprocessor
+# ===============================
 try:
     import torch
     import torch.nn as nn
@@ -85,21 +90,28 @@ def load_preprocessor(path="preprocessor.joblib"):
     return joblib.load(path)
 
 def build_input_df(feats: dict, preprocessor):
-    # Lấy danh sách cột từ preprocessor
-    required_cols = []
+    """
+    Dựa trên preprocessor.transformers_ để phân biệt cột numeric và text.
+    - Numeric: nếu thiếu -> 0
+    - Text: nếu thiếu -> ""
+    """
+    num_cols = []
+    text_cols = []
     for name, trans, cols_spec in preprocessor.transformers_:
-        if isinstance(cols_spec, (list, tuple)):
-            required_cols.extend(cols_spec)
+        cols = cols_spec if isinstance(cols_spec,(list,tuple)) else [cols_spec]
+        # Nếu transformer có 'strategy' thì thường là SimpleImputer numeric
+        if hasattr(trans, 'strategy'):
+            num_cols.extend(cols)
         else:
-            required_cols.append(cols_spec)
-    required_cols = list(dict.fromkeys(required_cols))
+            text_cols.extend(cols)
+    required_cols = num_cols + text_cols
 
     row = {}
     for c in required_cols:
         if c in feats:
             row[c] = feats[c]
         else:
-            row[c] = "" if any(s in str(c).lower() for s in ("import","dll","text")) else 0
+            row[c] = "" if c in text_cols else 0
     df = pd.DataFrame([row], columns=required_cols)
     return df
 
@@ -138,6 +150,9 @@ def predict_with_mlp(preprocessor, model_path, df):
     pred = int(prob >= 0.5)
     return prob, pred
 
+# ===============================
+# 3. Main
+# ===============================
 def main():
     parser = argparse.ArgumentParser(description="Predict PE malware/benign cho 1 file")
     parser.add_argument("--file", "-f", required=True, help="Path tới file PE (.exe/.dll)")
