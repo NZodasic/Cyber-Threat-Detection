@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/raymond/Desktop/PE-Analysis-DL-Based/classify.py", line 187, in <module>
+    main()
+  File "/home/raymond/Desktop/PE-Analysis-DL-Based/classify.py", line 172, in main
+    probs, pred_class = predict_with_rf(preprocessor, model, le, df)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/raymond/Desktop/PE-Analysis-DL-Based/classify.py", line 99, in predict_with_rf
+    X = preprocessor.transform(df)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/raymond/Desktop/PE-Analysis-DL-Based/venv/lib/python3.12/site-packages/sklearn/utils/_set_output.py", line 316, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/raymond/Desktop/PE-Analysis-DL-Based/venv/lib/python3.12/site-packages/sklearn/compose/_column_transformer.py", line 1085, in transform
+    raise ValueError(f"columns are missing: {diff}")
+ValueError: columns are missing: {'sec_virtualsize_data', 'sec_entropy_reloc', 'sec_virtualsize_reloc', 'sec_virtualsize_edata', 'sec_virtualsize_rdata', 'sec_entropy_pdata', 'sec_virtualsize_debug', 'strings_count', 'resource_total_size', 'sec_present_reloc', 'suspicious_api_count', 'sec_rawsize_tls', 'sec_ratio_rdata', 'sec_ratio_data', 'Has_TLS', 'dll_wininet_dll', 'sec_ratio_tls', 'sec_entropy_debug', 'dll_kernel32_dll', 'Machine', 'sec_virtualsize_idata', 'TimeDateStamp', 'dll_wsock32_dll', 'sec_virtualsize_tls', 'Subsystem', 'sec_ratio_bss', 'LinkerVersion', 'sec_present_pdata', 'export_count', 'sec_ratio_edata', 'sec_rawsize_debug', 'sec_ratio_rsrc', 'sec_present_rsrc', 'sec_present_rdata', 'sec_present_tls', 'sec_virtualsize_pdata', 'Characteristics', 'sec_entropy_rdata', 'sec_present_data', 'dll_ws2_32_dll', 'sec_present_bss', 'dll_user32_dll', 'import_count', 'sec_virtualsize_text', 'mean_section_entropy', 'AddressOfEntryPoint', 'dll_gdi32_dll', 'sec_virtualsize_bss', 'sec_present_debug', 'FileSize', 'sec_present_text', 'sec_rawsize_rsrc', 'suspicious_string_count', 'sec_entropy_edata', 'sec_ratio_idata', 'sec_rawsize_edata', 'mean_section_ratio', 'sec_virtualsize_rsrc', 'sec_ratio_pdata', 'Checksum', 'sec_entropy_text', 'sec_entropy_idata', 'sec_ratio_debug', 'SizeOfHeaders', 'sec_rawsize_idata', 'dll_ntdll_dll', 'resource_count', 'sec_rawsize_pdata', 'sec_rawsize_bss', 'sec_rawsize_data', 'sec_present_idata', 'sec_entropy_bss', 'sec_rawsize_text', 'sec_entropy_data', 'sec_present_edata', 'sec_entropy_rsrc', 'sec_entropy_tls', 'dll_advapi32_dll', 'FileEntropy', 'sec_ratio_reloc', 'sec_ratio_text', 'sec_rawsize_reloc', 'sec_rawsize_rdata'}
+(venv) raymond@raymond-Virtual-Machine:~/Desktop/PE-Analysis-DL-Based$ 
