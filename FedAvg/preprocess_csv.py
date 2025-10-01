@@ -26,6 +26,10 @@ def main():
     y_raw = df["label"].values
     X_raw = df.drop(columns=["label"])
 
+    import_cols = [c for c in X_raw.columns if c.startswith("import_")]
+    if import_cols and "imports_text" not in X_raw.columns:
+        X_raw["imports_text"] = X_raw[import_cols].fillna("").agg(" ".join, axis=1)
+
     # Load preprocessor + label encoder
     preprocessor = joblib.load(args.preprocessor)
     label_encoder = joblib.load(args.label_encoder)
