@@ -17,7 +17,7 @@ def main():
                         help="Output path for processed features CSV")
     args = parser.parse_args()
 
-    # Load raw data
+    # Load raw features
     df = pd.read_csv(args.input)
     if "label" not in df.columns:
         raise ValueError("Input CSV must contain a 'label' column.")
@@ -26,22 +26,28 @@ def main():
     y_raw = df["label"].values
     X_raw = df.drop(columns=["label"])
 
+    # Nếu có các cột import_0..import_9 thì tạo imports_text
     import_cols = [c for c in X_raw.columns if c.startswith("import_")]
     if import_cols and "imports_text" not in X_raw.columns:
         X_raw["imports_text"] = X_raw[import_cols].fillna("").agg(" ".join, axis=1)
 
-    # Load preprocessor + label encoder
+    # Load preprocessor và label encoder
     preprocessor = joblib.load(args.preprocessor)
     label_encoder = joblib.load(args.label_encoder)
 
     # Transform features
-    X_proc = preprocessor.transform(X_raw)
+    try:
+        X_proc = preprocessor.transform(X_raw)
+    except Exception as e:
+        print("[ERROR] Preprocessor transform failed. Columns available:", X_raw.columns.tolist())
+        raise e
 
     # Encode labels
     y_enc = label_encoder.transform(y_raw)
 
-    # Convert to DataFrame for saving
-    X_df = pd.DataFrame(X_proc, columns=[f"f{i}" for i in range(X_proc.shape[1])])
+    # Xuất ra DataFrame
+    feature_names = [f"f{i}" for i in range(X_proc.shape[1])]
+    X_df = pd.DataFrame(X_proc, columns=feature_names)
     X_df["label"] = y_enc
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
@@ -51,8 +57,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# python preprocess_csv.py --input raw_features.csv \
-#     --preprocessor preprocessor.joblib \
-#     --label_encoder label_encoder.joblib \
-#     --output data/features.csv
